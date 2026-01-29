@@ -1,0 +1,4 @@
+symbol,and_threshold,or_threshold,buy_threshold,train_years,train_return,train_period
+BTC,20,50,10,3,352.3,2023-2025
+ETH,5,30,-10,3,148.2,2023-2025
+SOL,15,30,-10,2,104.4,2024-2025

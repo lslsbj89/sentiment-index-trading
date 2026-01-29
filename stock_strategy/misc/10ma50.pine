@@ -1,0 +1,238 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+//@version=4
+////////////////////////////////////
+// Author      : CryptoProTools   //
+// Original by : dgtrd            //
+////////////////////////////////////
+//   May The Profit Be With You!  //
+//::           .--.             :://
+//:::::\`--._,'.::.`._.--'/::::::://
+//:::::::.  ` __::__ '  .::::::::://
+//:::::::::-:.`'..`'.:-::::::::::://
+//:::::::::::\ `--' /::::::::::::://
+////////////////////////////////////
+
+study(title="3 Simplified Crypto Fear & Greed Display with Strategy", shorttitle="Simple Crypto F&G + Strategy", overlay=true)
+
+// ::::::::::::::::::::::::::::::::::::::::::::::::::::::: //
+// ::::::::::::::::::::::  Settings :::::::::::::::::::::: //
+// ::::::::::::::::::::::::::::::::::::::::::::::::::::::: //
+
+mode       = input("Crypto", title="Mode", options=['Crypto', 'Traditional'])
+smoothing  = input(5, title="Smoothing", options=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+cBars      = input(false, title="Color Code Candles?")
+
+// ::::::::::::::::::::::::::::::::::::::::::::::::::::::: //
+// ::::::::::::::::::::  Calculations :::::::::::::::::::: //
+// ::::::::::::::::::::::::::::::::::::::::::::::::::::::: //
+
+pmacd      = security(syminfo.tickerid, "D", (close/ema(close, 89) - 1) * 100)
+ror        = security(syminfo.tickerid, "D", (close - close[89])/close[89] * 100)
+accDist    = security(syminfo.tickerid, "D", close==high and close==low or high==low ? 0 : ((2 * close - low - high) / (high - low)))
+vol        = security(syminfo.tickerid, "D", volume)
+
+moneyFlow  = if nz(vol) != 0
+    sum(accDist * vol, 13) / sum(vol, 13) * 100
+
+volatility = security("BVOL24H", "D", -(close/ema(close, 89) - 1) * 100)
+btcdom     = security("BTC.D",   "D",  (1 - close[13] / close) * 100)
+vix        = security("VIX" ,    "D", -(close/ema(close, 89) - 1) * 100)
+gold       = security("GOLD",    "D",  (1 - close[13] / close) * 100)
+
+val1 = if mode == "Crypto"
+    volatility
+else
+    vix
+
+val2 = if mode == "Crypto"
+    btcdom
+else
+    gold
+
+cycle = if nz(vol) == 0
+    rma((pmacd + ror + val1 + val2) / 4, smoothing)
+else
+    rma((pmacd + ror + moneyFlow + val1 + val2) / 5, smoothing)
+
+// ::::::::::::::::::::::::::::::::::::::::::::::::::::::: //
+// :::::::::::::::::::: Trading Strategy :::::::::::::::::: //
+// ::::::::::::::::::::::::::::::::::::::::::::::::::::::: //
+
+// 策略参数
+useStrategy = input(true, title="═══════ Strategy Settings ═══════")
+entryThreshold = input(-10, title="Entry Threshold (Fear Level)", maxval=0)
+maLength = input(50, title="MA Length for Exit", minval=10, maxval=200)
+showMA = input(true, title="Show MA50 on Chart")
+
+// 仓位管理
+positionSize = input(100, title="Position Size %", minval=10, maxval=100, step=10) / 100
+maxPositions = input(3, title="Max Concurrent Positions", minval=1, maxval=10)
+
+// 计算50日移动平均线
+ma50 = sma(close, maLength)
+
+// 追踪持仓
+var int positionCount = 0
+var float[] entryPrices = array.new_float(0)
+var int[] entryBars = array.new_int(0)
+
+// 买入条件：恐惧贪婪指数小于-10
+longCondition = cycle < entryThreshold and positionCount < maxPositions
+
+// 卖出条件：价格下穿50日均线
+exitCondition = crossunder(close, ma50)
+
+// 记录买入信号
+if longCondition and useStrategy
+    positionCount := positionCount + 1
+    array.push(entryPrices, close)
+    array.push(entryBars, bar_index)
+    
+// 记录卖出信号
+if exitCondition and useStrategy and positionCount > 0
+    positionCount := 0
+    array.clear(entryPrices)
+    array.clear(entryBars)
+
+// ::::::::::::::::::::::::::::::::::::::::::::::::::::::: //
+// ::::::::::::::::::::: Visualization :::::::::::::::::::: //
+// ::::::::::::::::::::::::::::::::::::::::::::::::::::::: //
+
+// 显示MA50
+plot(showMA ? ma50 : na, title="MA50", color=color.yellow, linewidth=2)
+
+// 显示买入信号
+plotshape(longCondition and useStrategy, 
+    title="Buy Signal", 
+    location=location.belowbar, 
+    color=color.new(color.green, 0), 
+    style=shape.triangleup, 
+    size=size.normal,
+    text="BUY\nFear < -10")
+
+// 显示卖出信号
+plotshape(exitCondition and useStrategy and positionCount > 0, 
+    title="Sell Signal", 
+    location=location.abovebar, 
+    color=color.new(color.red, 0), 
+    style=shape.triangledown, 
+    size=size.normal,
+    text="SELL\n< MA50")
+
+// 标记当前价格与MA50的关系
+priceVsMA = close > ma50 ? "Above MA50" : "Below MA50"
+maDistance = ((close - ma50) / ma50) * 100
+
+// ::::::::::::::::::::::::::::::::::::::::::::::::::::::: //
+// :::::::::::::::::::: Info Panel :::::::::::::::::::::::: //
+// ::::::::::::::::::::::::::::::::::::::::::::::::::::::: //
+
+// 创建信息面板
+var table infoTable = table.new(position.top_right, 2, 7, 
+    bgcolor=color.new(color.black, 85),
+    border_color=color.gray, 
+    border_width=1)
+
+// 判断市场情绪
+index = "Neutral"
+if cycle >= 50
+    index := "Extreme Greed"
+else if cycle >= 35
+    index := "Greed+"
+else if cycle >= 20
+    index := "Greed"
+else if cycle >= 5
+    index := "Neutral/Hopeful"
+else if cycle < -40
+    index := "Extreme Fear"
+else if cycle < -25
+    index := "Fear+"
+else if cycle < -15
+    index := "Fear"
+else if cycle < -5
+    index := "Neutral/Concerned"
+else
+    index := "Neutral"
+
+// 更新信息面板
+if barstate.islast
+    // 标题
+    table.cell(infoTable, 0, 0, "Metric", 
+        text_color=color.white, 
+        text_halign=text.align_left,
+        bgcolor=color.new(color.blue, 50))
+    table.cell(infoTable, 1, 0, "Value", 
+        text_color=color.white,
+        text_halign=text.align_right,
+        bgcolor=color.new(color.blue, 50))
+    
+    // 恐惧贪婪指数
+    table.cell(infoTable, 0, 1, "F&G Index", text_color=color.white)
+    indexColor = cycle < -10 ? color.green : cycle > 35 ? color.red : color.gray
+    table.cell(infoTable, 1, 1, tostring(cycle, "#.##"), 
+        text_color=indexColor,
+        text_halign=text.align_right)
+    
+    // 市场情绪
+    table.cell(infoTable, 0, 2, "Sentiment", text_color=color.white)
+    sentimentColor = cycle < -10 ? color.green : cycle > 35 ? color.red : color.gray
+    table.cell(infoTable, 1, 2, index, 
+        text_color=sentimentColor,
+        text_halign=text.align_right)
+    
+    // MA50状态
+    table.cell(infoTable, 0, 3, "MA50 Status", text_color=color.white)
+    maColor = close > ma50 ? color.green : color.red
+    table.cell(infoTable, 1, 3, priceVsMA, 
+        text_color=maColor,
+        text_halign=text.align_right)
+    
+    // MA50距离
+    table.cell(infoTable, 0, 4, "MA50 Distance", text_color=color.white)
+    table.cell(infoTable, 1, 4, tostring(maDistance, "#.##") + "%", 
+        text_color=maColor,
+        text_halign=text.align_right)
+    
+    // 信号状态
+    table.cell(infoTable, 0, 5, "Signal", text_color=color.white)
+    signalText = longCondition ? "BUY SIGNAL" : 
+                 exitCondition and positionCount > 0 ? "SELL SIGNAL" : "WAIT"
+    signalColor = longCondition ? color.green : 
+                  exitCondition and positionCount > 0 ? color.red : color.gray
+    table.cell(infoTable, 1, 5, signalText, 
+        text_color=signalColor,
+        text_halign=text.align_right)
+    
+    // 持仓状态
+    table.cell(infoTable, 0, 6, "Positions", text_color=color.white)
+    posText = tostring(positionCount) + "/" + tostring(maxPositions)
+    posColor = positionCount > 0 ? color.yellow : color.gray
+    table.cell(infoTable, 1, 6, posText, 
+        text_color=posColor,
+        text_halign=text.align_right)
+
+// 着色K线
+barcolor(cBars and useStrategy ? 
+    (longCondition ? color.green : 
+     exitCondition and positionCount > 0 ? color.red : 
+     na) : na)
+
+// ::::::::::::::::::::::::::::::::::::::::::::::::::::::: //
+// :::::::::::::::::::: Alert Conditions :::::::::::::::::: //
+// ::::::::::::::::::::::::::::::::::::::::::::::::::::::: //
+
+alertcondition(longCondition, 
+    title="Fear Buy Signal", 
+    message="Fear & Greed Index < -10. Consider buying.")
+
+alertcondition(exitCondition and positionCount > 0, 
+    title="MA50 Sell Signal", 
+    message="Price crossed below MA50. Consider selling.")
+
+alertcondition(cycle < -25, 
+    title="Extreme Fear Alert", 
+    message="Market in Extreme Fear zone (< -25)")
+
+alertcondition(cycle > 35, 
+    title="High Greed Alert", 
+    message="Market in High Greed zone (> 35)")

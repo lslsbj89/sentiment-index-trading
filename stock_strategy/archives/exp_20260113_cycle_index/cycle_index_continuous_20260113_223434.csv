@@ -1,0 +1,8 @@
+symbol,buy_threshold,and_sell_threshold,or_sell_threshold,continuous_return,yearly_cumulative,max_drawdown,total_trades,win_rate
+TSLA,-5,15,30,422.2033329367406,625,-61.41629288005037,4,42.822966507177036
+NVDA,-25,0,20,0.0,482,0.0,0,0.0
+AAPL,-25,0,20,0.0,130,0.0,0,0.0
+GOOGL,-25,0,20,0.0,163,0.0,0,0.0
+MSFT,-25,0,20,0.0,127,0.0,0,0.0
+AMZN,-25,0,20,0.0,97,0.0,0,0.0
+META,-20,0,20,-12.740855946450013,228,-27.42381366831236,1,4.704944178628389

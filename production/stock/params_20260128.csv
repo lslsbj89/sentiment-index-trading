@@ -1,0 +1,8 @@
+symbol,buy_threshold,optimal_buy,and_threshold,or_threshold,train_return,train_period
+NVDA,0,0,5,50,517.9,2022-2025
+TSLA,0,-15,25,30,233.6,2022-2025
+AAPL,0,5,5,30,111.4,2022-2025
+MSFT,0,0,5,30,75.0,2022-2025
+GOOGL,0,-5,10,50,137.4,2022-2025
+AMZN,0,0,10,30,88.3,2022-2025
+META,0,0,15,55,141.9,2022-2025

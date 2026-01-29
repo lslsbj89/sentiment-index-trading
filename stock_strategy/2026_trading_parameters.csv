@@ -1,0 +1,6 @@
+symbol,data_table,smoothing,relaxation_method,train_buy,test_buy_2026,and_threshold,or_threshold,position_pct,priority
+NVDA,fear_greed_index_s3,3,additive,5,10,22,55,0.20,1
+AAPL,fear_greed_index_s3,3,multiplicative,0,0,5,25,0.20,2
+TSLA,fear_greed_index_s3,3,multiplicative,-10,-8,25,50,0.15,3
+MSFT,fear_greed_index_s3,3,multiplicative,0,0,10,30,0.15,4
+GOOGL,fear_greed_index_s3,3,multiplicative,-15,-12,15,25,0.15,5
