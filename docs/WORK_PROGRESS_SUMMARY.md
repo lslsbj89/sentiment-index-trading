@@ -1,8 +1,11 @@
 # 工作进度总结
 
-**更新日期**: 2026-01-28
-**项目**: 情绪策略研究 (美股七强 + 加密货币)
+**更新日期**: 2026-01-29
+**项目**: 情绪指数交易系统 (美股七强 + 加密货币)
+**仓库**: [sentiment-index-trading](https://github.com/lslsbj89/sentiment-index-trading)
 **数据源**: Fear Greed Index S3 (美股) / yahoo_artemis_index (加密货币)
+
+> **注**: 本项目于 2026-01-29 从 [AAPL](https://github.com/lslsbj89/AAPL) 仓库分离，原仓库专注于 XGBoost ML 系统。
 
 ---
 
@@ -264,9 +267,9 @@ NVDA 25% + TSLA 15% + AAPL 15% + GOOGL 15% + MSFT 10% + AMZN 10% + 现金 10%
 ### 3.4 季度更新
 
 ```bash
-cd 2026_stock_production
-python3 retrain_sell_params.py          # 自动用最近4年
-python3 retrain_sell_params.py 2022 2026  # 或指定训练期
+cd production/stock
+python3 retrain_params.py          # 自动用最近4年
+python3 retrain_params.py 2022 2026  # 或指定训练期
 ```
 
 | 时间 | 训练期 | 操作 |
@@ -280,7 +283,7 @@ python3 retrain_sell_params.py 2022 2026  # 或指定训练期
 
 ## 四、产出文件清单
 
-### 4.1 美股生产文件夹 (`2026_stock_production/`) ⭐
+### 4.1 美股生产文件夹 (`production/stock/`) ⭐
 
 | 文件 | 说明 |
 |------|------|
@@ -289,7 +292,7 @@ python3 retrain_sell_params.py 2022 2026  # 或指定训练期
 | `retrain_params.py` | 季度参数更新脚本 |
 | `params_*.csv` | 买入+卖出参数文件 |
 
-### 4.2 实验文件夹 (`sentiment_strategy/`)
+### 4.2 实验文件夹 (`stock_strategy/`)
 
 | 目录 | 说明 |
 |------|------|
@@ -314,7 +317,7 @@ python3 retrain_sell_params.py 2022 2026  # 或指定训练期
 | `crypto_threshold_search.png` | 阈值搜索对比图 |
 | `crypto_train_mode_comparison.png` | 训练模式对比图 |
 
-### 4.4 加密货币生产文件夹 (`2026_crypto_production/`) ⭐
+### 4.4 加密货币生产文件夹 (`production/crypto/`) ⭐
 
 | 文件 | 说明 |
 |------|------|
@@ -322,7 +325,7 @@ python3 retrain_sell_params.py 2022 2026  # 或指定训练期
 | `retrain_params.py` | 季度参数更新脚本 (interval buy training) |
 | `params_*.csv` | 买入+卖出参数文件 |
 
-### 4.5 美股训练模式实验 (`sentiment_strategy/interval_train_experiment/`)
+### 4.5 美股训练模式实验 (`stock_strategy/interval_train_experiment/`)
 
 | 文件 | 说明 |
 |------|------|
@@ -338,17 +341,31 @@ python3 retrain_sell_params.py 2022 2026  # 或指定训练期
 | `visualize_interval_buy_comparison.py` | 情绪指数对比 (间隔分批版) |
 | `visualize_buy_strategy_comparison.py` | 买入策略对比 (阈值 vs 间隔) |
 
-### 4.7 根目录文档
+### 4.7 文档 (`docs/`)
 
 | 文件 | 说明 |
 |------|------|
 | `2026_THRESHOLD_STAGED_RECOMMENDATION.md` | v2.0推荐 (已被v3.0取代) |
 | `WORK_PROGRESS_SUMMARY.md` | 本文档 |
 
+### 4.8 根目录
+
+| 文件 | 说明 |
+|------|------|
+| `README.md` | 项目说明 |
+| `CLAUDE.md` | 技术文档 |
+
 ---
 
 ## 五、Git提交历史
 
+### 新仓库 (sentiment-index-trading)
+```
+f22ca25 docs: add CLAUDE.md technical documentation
+37dee4d Initial commit: sentiment index trading system
+```
+
+### 原仓库历史 (AAPL, 分离前)
 ```
 163fbae docs: add project overview to CLAUDE.md
 ab37f33 fix: allow fractional crypto purchases in all crypto strategy files
@@ -412,19 +429,23 @@ cdc4ec4 docs: add TSLA root cause analysis to MF26 comparison report
 ## 七、后续工作
 
 ### 美股
-1. **每日执行**: 按 `2026_stock_production/OPERATION_GUIDE.md` 检查情绪信号
-2. **季度更新**: 在 `2026_stock_production/` 运行 `retrain_sell_params.py` 更新卖出参数
+1. **每日执行**: 按 `production/stock/OPERATION_GUIDE.md` 检查情绪信号
+2. **季度更新**: 在 `production/stock/` 运行 `retrain_params.py` 更新卖出参数
 3. **市场适应**: 牛市考虑提高OR阈值, 熊市增加现金储备
 4. **策略迭代**: 积累2026实盘数据后评估策略效果
 
 ### 加密货币
-5. **生产部署**: ✅ 已建立 `2026_crypto_production/` (已移至主目录), 含操作指南和季度更新脚本
-6. **季度更新**: 2026-04 在 `2026_crypto_production/` 运行 `retrain_sell_params.py` 更新卖出参数 (含 Q1 新数据)
+5. **生产部署**: ✅ 已建立 `production/crypto/`, 含操作指南和季度更新脚本
+6. **季度更新**: 2026-04 在 `production/crypto/` 运行 `retrain_params.py` 更新卖出参数 (含 Q1 新数据)
 7. **扩展币种**: 考虑增加更多主流币种 (如 DOGE, AVAX 等)
 
 ### 训练模式
-8. **美股生产方案更新**: ✅ 已将美股 `retrain_sell_params.py` 改用 interval buy training, 3只股票参数变化 (TSLA/MSFT/GOOGL)
+8. **美股生产方案更新**: ✅ 已将美股 `retrain_params.py` 改用 interval buy training, 3只股票参数变化 (TSLA/MSFT/GOOGL)
 9. **进一步实验**: 对美股测试更多情绪指数 (s5, s3_vix) 下的训练模式对比
+
+### 仓库管理
+10. **仓库分离**: ✅ 2026-01-29 从 AAPL 仓库分离为独立仓库
+11. **文档更新**: ✅ 添加 CLAUDE.md 技术文档
 
 ---
 
